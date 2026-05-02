@@ -32,7 +32,7 @@ export default function AdminPage() {
   const [confirmDel, setConfirmDel] = useState<{ id: string; titulo: string } | null>(null);
   const [toast, setToast]           = useState<{ msg: string; tipo: 'success' | 'error' } | null>(null);
   const [formMsg, setFormMsg]       = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null);
-  const imgTimer = useRef<NodeJS.Timeout>();
+  const imgTimer = useRef<number>();
 
   useEffect(() => {
     const c = localStorage.getItem('userEmail');
