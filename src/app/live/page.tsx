@@ -15,6 +15,7 @@ export default function LivePage() {
   const [filtrados, setFiltrados]   = useState<Contenido[]>([]);
   const [categorias, setCategorias] = useState<string[]>([]);
   const [catActual, setCatActual]   = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const [modalItem, setModalItem]   = useState<Contenido | null>(null);
   const [loading, setLoading]       = useState(true);
   const [nombre, setNombre]         = useState('Usuario');
@@ -43,7 +44,25 @@ export default function LivePage() {
 
   const filtrarPorCategoria = (cat: string) => {
     setCatActual(cat);
-    setFiltrados(cat === 'all' ? [...streams] : streams.filter(s => s.seccion === cat));
+    aplicarFiltros(cat, searchQuery);
+  };
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    aplicarFiltros(catActual, query);
+  };
+
+  const aplicarFiltros = (cat: string, query: string) => {
+    let base = cat === 'all' ? [...streams] : streams.filter(s => s.seccion === cat);
+    if (query.trim()) {
+      const q = query.toLowerCase();
+      base = base.filter(s =>
+        (s.titulo || '').toLowerCase().includes(q) ||
+        (s.plataforma || '').toLowerCase().includes(q) ||
+        (s.seccion || '').toLowerCase().includes(q)
+      );
+    }
+    setFiltrados(base);
   };
 
   const featured  = filtrados.slice(0, 3);
@@ -98,7 +117,7 @@ export default function LivePage() {
 
       {/* Main */}
       <main className="live-main">
-        <Navbar />
+        <Navbar onSearch={handleSearch} />
         {loading ? (
           <div className="loading-state show" style={{ marginTop: 80 }}>
             <div className="spinner" /><span>Cargando streams...</span>

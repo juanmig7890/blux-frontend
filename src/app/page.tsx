@@ -23,13 +23,10 @@ export default function IndexPage() {
   const [rErr, setRErr]     = useState('');
   const [rOk, setROk]       = useState('');
 
-  const [recEmail, setRecEmail]   = useState('');
-  const [recMsg, setRecMsg]       = useState('');
+  const [recEmail, setRecEmail]     = useState('');
+  const [recNew, setRecNew]         = useState('');
+  const [recMsg, setRecMsg]         = useState('');
   const [recMsgType, setRecMsgType] = useState<'ok'|'err'>('ok');
-  const [recStep2, setRecStep2]   = useState(false);
-  const [recCode, setRecCode]     = useState('');
-  const [recNew, setRecNew]       = useState('');
-  const [recMsg2, setRecMsg2]     = useState('');
 
   // Profile pages
   const [page, setPage] = useState<'auth'|'select'|'setup'>('auth');
@@ -51,7 +48,7 @@ export default function IndexPage() {
 
   const clearMsgs = () => {
     setLErr(''); setLOk(''); setRErr(''); setROk('');
-    setRecMsg(''); setRecMsg2('');
+    setRecMsg(''); setRecEmail(''); setRecNew('');
   };
 
   const toggle = (f: FormView) => { clearMsgs(); setForm(f); };
@@ -144,30 +141,25 @@ export default function IndexPage() {
     setPerfiles(await res.json());
   };
 
-  const enviarCodigo = async () => {
+  const cambiarPassDirecto = async () => {
     if (!recEmail) return (setRecMsg('Ingresa tu correo.'), setRecMsgType('err'));
+    if (!recNew)   return (setRecMsg('Ingresa la nueva contraseña.'), setRecMsgType('err'));
+    if (recNew.length < 8) return (setRecMsg('La contraseña debe tener al menos 8 caracteres.'), setRecMsgType('err'));
     try {
-      const res = await fetch(`${API}/v1/auth/recuperar/solicitar`, {
+      const res = await fetch(`${API}/v1/auth/recuperar/directo`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ correo: recEmail }),
+        body: JSON.stringify({ correo: recEmail, newPassword: recNew }),
       });
       const data = await res.json();
-      if (res.ok) { setRecMsg('✅ Código enviado. Revisa tu correo.'); setRecMsgType('ok'); setRecStep2(true); }
-      else { setRecMsg(data.error || 'Error al enviar código.'); setRecMsgType('err'); }
+      if (res.ok) {
+        setRecMsg('✅ Contraseña cambiada. Inicia sesión.');
+        setRecMsgType('ok');
+        setTimeout(() => toggle('login'), 2000);
+      } else {
+        setRecMsg(data.error || data.message || 'Correo no registrado.');
+        setRecMsgType('err');
+      }
     } catch { setRecMsg('Error de conexión.'); setRecMsgType('err'); }
-  };
-
-  const cambiarPass = async () => {
-    if (!recCode || !recNew) return setRecMsg2('Completa todos los campos.');
-    try {
-      const res = await fetch(`${API}/v1/auth/recuperar/cambiar`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ correo: recEmail, codigo: recCode, newPassword: recNew }),
-      });
-      const data = await res.json();
-      if (res.ok) { setRecMsg2('✅ Contraseña cambiada. Inicia sesión.'); setTimeout(() => toggle('login'), 2000); }
-      else setRecMsg2(data.error || 'Código incorrecto.');
-    } catch { setRecMsg2('Error de conexión.'); }
   };
 
   // Collage
@@ -320,32 +312,27 @@ export default function IndexPage() {
           {form === 'recovery' && (
             <div className="form-wrap">
               <p className="form-label">Recuperar Contraseña</p>
-              <p style={{ fontSize: '0.9rem', color: '#ccc', marginBottom: 20 }}>
-                Te enviaremos un código de 6 dígitos a tu correo electrónico.
+              <p style={{ fontSize: '0.85rem', color: '#888', marginBottom: 20 }}>
+                Ingresa tu correo y tu nueva contraseña.
               </p>
               <div className="field">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" strokeWidth="2" strokeLinecap="round"/><circle cx="12" cy="7" r="4" strokeWidth="2"/></svg>
-                <input type="email" placeholder="Tu correo registrado" value={recEmail} onChange={e=>setRecEmail(e.target.value)} />
+                <input type="email" placeholder="Tu correo registrado" value={recEmail} onChange={e=>setRecEmail(e.target.value)}
+                       onKeyDown={e=>e.key==='Enter'&&cambiarPassDirecto()} />
+              </div>
+              <div className="field">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" strokeWidth="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4" strokeWidth="2" strokeLinecap="round"/></svg>
+                <input type="password" placeholder="Nueva contraseña (mín. 8 caracteres)" value={recNew} onChange={e=>setRecNew(e.target.value)}
+                       onKeyDown={e=>e.key==='Enter'&&cambiarPassDirecto()} />
               </div>
               {recMsg && <div className={`msg ${recMsgType}`}>{recMsg}</div>}
-              {!recStep2 && <button className="btn-main" onClick={enviarCodigo}>Enviar Código</button>}
-              {recStep2 && (
-                <>
-                  <div className="field" style={{ marginTop: 10 }}>
-                    <input type="text" placeholder="Código de 6 dígitos" maxLength={6} value={recCode} onChange={e=>setRecCode(e.target.value)} />
-                  </div>
-                  <div className="field">
-                    <input type="password" placeholder="Nueva contraseña" value={recNew} onChange={e=>setRecNew(e.target.value)} />
-                  </div>
-                  {recMsg2 && <div className="msg err">{recMsg2}</div>}
-                  <button className="btn-main" onClick={cambiarPass}>Cambiar Contraseña</button>
-                </>
-              )}
+              <button className="btn-main" onClick={cambiarPassDirecto}>Cambiar Contraseña</button>
               <p className="switch-link" style={{ cursor: 'pointer' }} onClick={() => toggle('login')}>
                 <span>Volver al inicio</span>
               </p>
             </div>
           )}
+
         </div>
       </div>
     </>
