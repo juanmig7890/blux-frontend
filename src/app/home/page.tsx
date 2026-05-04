@@ -61,7 +61,6 @@ export default function HomePage() {
     } catch (e) { console.error('Error cargando home:', e); }
   };
 
-  // Hero auto-rotation
   useEffect(() => {
     if (heroItems.length === 0) return;
     heroStart.current = Date.now();
@@ -86,7 +85,12 @@ export default function HomePage() {
     const esFav  = favoritosSet.has(itemId);
     try {
       if (esFav) {
-        await fetch(`${API}/v1/favoritos/eliminar?correo=${correo}&contenidoId=${itemId}`, { method: 'DELETE' });
+        // ✅ FIX: se manda correo y contenidoId en el body, no en query params
+        await fetch(`${API}/v1/favoritos/eliminar`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ correo, contenidoId: itemId }),
+        });
         setFavoritosSet(prev => { const n = new Set(prev); n.delete(itemId); return n; });
       } else {
         await fetch(`${API}/v1/favoritos/agregar`, {
@@ -127,7 +131,6 @@ export default function HomePage() {
         </div>
       ) : (
         <>
-          {/* HERO */}
           {heroItem && (
             <section className="hero-section">
               <div className="hero-bg" style={{ backgroundImage: `url('${heroItem.imagen}')` }} />
@@ -154,7 +157,6 @@ export default function HomePage() {
             </section>
           )}
 
-          {/* SECCIONES */}
           <div className="main-content">
             {Object.entries(secciones).map(([seccion, items]) => (
               <section key={seccion} className="content-section">
@@ -168,7 +170,6 @@ export default function HomePage() {
               </section>
             ))}
 
-            {/* EN VIVO */}
             {enVivo.length > 0 && (
               <section className="live-section">
                 <div className="live-section-header">

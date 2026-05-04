@@ -21,7 +21,6 @@ export default function MyListPage() {
   const [modalItem, setModalItem]   = useState<Contenido | null>(null);
   const [loading, setLoading]       = useState(true);
 
-  // Carrusel
   const angleRef = useRef(0);
   const pauseRef = useRef(false);
   const rafRef   = useRef<number>();
@@ -54,12 +53,16 @@ export default function MyListPage() {
   const quitarDeLista = async (itemId: string) => {
     const correo = localStorage.getItem('userEmail');
     try {
-      await fetch(`${API}/v1/favoritos/eliminar?correo=${correo}&contenidoId=${itemId}`, { method: 'DELETE' });
+      // ✅ FIX: se manda correo y contenidoId en el body, no en query params
+      await fetch(`${API}/v1/favoritos/eliminar`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ correo, contenidoId: itemId }),
+      });
       setMiLista(prev => prev.filter(i => i.id !== itemId));
     } catch {}
   };
 
-  // Carrusel circular CSS
   const carouselItems = miLista.slice(0, ITEMS_IN_WHEEL);
   const [carouselAngle, setCarouselAngle] = useState(0);
 
@@ -110,7 +113,6 @@ export default function MyListPage() {
     <>
       <Navbar />
       <div className="mylist-page">
-        {/* Header */}
         <div className="mylist-header">
           <h1>Mi Lista</h1>
           <p className="mylist-count">
@@ -118,7 +120,6 @@ export default function MyListPage() {
           </p>
         </div>
 
-        {/* Carrusel circular */}
         {carouselItems.length >= 2 && (
           <div className="carousel-section"
                onMouseEnter={() => { pauseRef.current = true; }}
@@ -160,7 +161,6 @@ export default function MyListPage() {
           </div>
         )}
 
-        {/* Grid */}
         <div className="mylist-grid-section">
           <div className="mylist-grid-header">
             <h2 className="mylist-grid-title">Todos los títulos</h2>

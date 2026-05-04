@@ -66,7 +66,12 @@ export default function MoviesPage() {
     const esFav  = favoritosSet.has(itemId);
     try {
       if (esFav) {
-        await fetch(`${API}/v1/favoritos/eliminar?correo=${correo}&contenidoId=${itemId}`, { method: 'DELETE' });
+        // ✅ FIX: se manda correo y contenidoId en el body, no en query params
+        await fetch(`${API}/v1/favoritos/eliminar`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ correo, contenidoId: itemId }),
+        });
         setFavoritosSet(prev => { const n = new Set(prev); n.delete(itemId); return n; });
       } else {
         await fetch(`${API}/v1/favoritos/agregar`, {
@@ -82,7 +87,6 @@ export default function MoviesPage() {
     <>
       <Navbar />
       <div className="movies-page">
-        {/* Hero */}
         {heroItem && (
           <div className="movies-hero">
             <div className="movies-hero-bg" style={{ backgroundImage: `url('${heroItem.imagen}')` }} />
@@ -96,7 +100,6 @@ export default function MoviesPage() {
           </div>
         )}
 
-        {/* Filtros */}
         <div className="movies-filters">
           <div className="movies-filters-top">
             <div>
@@ -118,7 +121,6 @@ export default function MoviesPage() {
           </div>
         </div>
 
-        {/* Grid */}
         <div className="movies-grid-section">
           <div className={`loading-state${loading ? ' show' : ''}`}>
             <div className="spinner" /><span>Cargando catálogo...</span>
