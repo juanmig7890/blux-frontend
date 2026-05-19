@@ -97,7 +97,7 @@ export default function HomePage() {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ correo, contenidoId: itemId }),
         });
-        setFavoritosSet(prev => new Set([...prev, itemId]));
+        setFavoritosSet(prev => new Set(Array.from(prev).concat(itemId)));
       }
     } catch {}
   }, [favoritosSet]);
