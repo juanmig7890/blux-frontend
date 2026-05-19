@@ -1,7 +1,7 @@
 'use client';
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { API, AVATARES, type Contenido, getId } from '@/types';
+import { API, type Contenido, getId } from '@/types';
 
 const SECCIONES_BASE = ['Acción', 'Comedia', 'Drama', 'Terror', 'Ciencia Ficción', 'Animación', 'Documental', 'Romance'];
 
@@ -32,7 +32,6 @@ export default function AdminPage() {
   const [confirmDel, setConfirmDel] = useState<{ id: string; titulo: string } | null>(null);
   const [toast, setToast]           = useState<{ msg: string; tipo: 'success' | 'error' } | null>(null);
   const [formMsg, setFormMsg]       = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null);
-  const imgTimer = useRef<number>();
 
   useEffect(() => {
     const c = localStorage.getItem('userEmail');
@@ -63,11 +62,13 @@ export default function AdminPage() {
         ));
   };
 
+  // Corrección para evitar el uso directo de Set.size en el renderizado
+  const seccionesValidas = catalogo.map(c => c.seccion).filter(Boolean);
   const stats = {
     total: catalogo.length,
     peliculas: catalogo.filter(c => c.tipo?.toLowerCase().includes('pelícu') || c.tipo?.toLowerCase().includes('pelicu')).length,
     series: catalogo.filter(c => c.tipo?.toLowerCase().includes('serie')).length,
-    secciones: new Set(catalogo.map(c => c.seccion).filter(Boolean)).size,
+    secciones: seccionesValidas.filter((item, index) => seccionesValidas.indexOf(item) === index).length,
   };
 
   const seccionFinal = form.useCustomSeccion ? form.seccionCustom : form.seccion;
@@ -232,15 +233,15 @@ export default function AdminPage() {
               <div className="form-grid">
                 <div className="form-group">
                   <label>Título *</label>
-                  <input type="text" value={form.titulo} onChange={e => setForm(f => ({ ...f, titulo: e.target.value }))} placeholder="Título del contenido" />
+                  <input type="text" value={form.titulo} onChange={e => setForm(f => ({ ...f, ...{ titulo: e.target.value } }))} placeholder="Título del contenido" />
                 </div>
                 <div className="form-group">
                   <label>Plataforma *</label>
-                  <input type="text" value={form.plataforma} onChange={e => setForm(f => ({ ...f, plataforma: e.target.value }))} placeholder="Netflix, HBO, etc." />
+                  <input type="text" value={form.plataforma} onChange={e => setForm(f => ({ ...f, ...{ plataforma: e.target.value } }))} placeholder="Netflix, HBO, etc." />
                 </div>
                 <div className="form-group">
                   <label>Tipo *</label>
-                  <select value={form.tipo} onChange={e => setForm(f => ({ ...f, tipo: e.target.value }))}>
+                  <select value={form.tipo} onChange={e => setForm(f => ({ ...f, ...{ tipo: e.target.value } }))}>
                     <option value="">Seleccionar...</option>
                     <option value="Película">Película</option>
                     <option value="Serie">Serie</option>
@@ -262,28 +263,28 @@ export default function AdminPage() {
                   </select>
                   {form.useCustomSeccion && (
                     <input type="text" style={{ marginTop: 8 }} placeholder="Nombre de sección"
-                           value={form.seccionCustom} onChange={e => setForm(f => ({ ...f, seccionCustom: e.target.value }))} />
+                           value={form.seccionCustom} onChange={e => setForm(f => ({ ...f, ...{ seccionCustom: e.target.value } }))} />
                   )}
                 </div>
                 <div className="form-group full">
                   <label>URL de imagen *</label>
-                  <input type="text" value={form.imagen} onChange={e => setForm(f => ({ ...f, imagen: e.target.value }))} placeholder="https://..." />
+                  <input type="text" value={form.imagen} onChange={e => setForm(f => ({ ...f, ...{ imagen: e.target.value } }))} placeholder="https://..." />
                 </div>
                 <div className="form-group full">
                   <label>URL de reproducción</label>
-                  <input type="text" value={form.url} onChange={e => setForm(f => ({ ...f, url: e.target.value }))} placeholder="https://..." />
+                  <input type="text" value={form.url} onChange={e => setForm(f => ({ ...f, ...{ url: e.target.value } }))} placeholder="https://..." />
                 </div>
                 <div className="form-group full">
                   <label>Descripción</label>
-                  <textarea value={form.descripcion} onChange={e => setForm(f => ({ ...f, descripcion: e.target.value }))} placeholder="Descripción del contenido..." />
+                  <textarea value={form.descripcion} onChange={e => setForm(f => ({ ...f, ...{ descripcion: e.target.value } }))} placeholder="Descripción del contenido..." />
                 </div>
                 <div className="form-group">
                   <label>Año</label>
-                  <input type="number" value={form.año} onChange={e => setForm(f => ({ ...f, año: e.target.value }))} placeholder="2024" />
+                  <input type="number" value={form.año} onChange={e => setForm(f => ({ ...f, ...{ año: e.target.value } }))} placeholder="2024" />
                 </div>
                 <div className="form-group">
                   <label>Rating (0–10)</label>
-                  <input type="number" value={form.rating} min="0" max="10" step="0.1" onChange={e => setForm(f => ({ ...f, rating: e.target.value }))} placeholder="8.5" />
+                  <input type="number" value={form.rating} min="0" max="10" step="0.1" onChange={e => setForm(f => ({ ...f, ...{ rating: e.target.value } }))} placeholder="8.5" />
                 </div>
               </div>
               {formMsg && <div className={`msg ${formMsg.tipo}`} style={{ marginTop: 16 }}>{formMsg.msg}</div>}
