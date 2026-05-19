@@ -36,7 +36,9 @@ export default function LivePage() {
       const data: Contenido[] = await res.json();
       setStreams(data);
       setFiltrados(data);
-      const cats = [...new Set(data.map(s => s.seccion).filter(Boolean))] as string[];
+      
+      // SOLUCIÓN AL ERROR DE TYPE: Reemplazo de [...new Set(...)] por Array.from()
+      const cats = Array.from(new Set(data.map(s => s.seccion).filter(Boolean))) as string[];
       setCategorias(cats);
     } catch (e) { console.error(e); }
     setLoading(false);
