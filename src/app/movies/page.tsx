@@ -42,7 +42,9 @@ export default function MoviesPage() {
       setTodas(items);
       setFiltradas(items);
       if (items.length > 0) setHeroItem(items[0]);
-      const secs = [...new Set(items.map(p => p.seccion).filter(Boolean))] as string[];
+      
+      // ✅ CORRECCIÓN 1: Evitar desestructuración directa del Set de secciones
+      const secs = Array.from(new Set(items.map(p => p.seccion).filter(Boolean))) as string[];
       setSecciones(secs);
     } catch (e) { console.error(e); }
     setLoading(false);
@@ -66,7 +68,7 @@ export default function MoviesPage() {
     const esFav  = favoritosSet.has(itemId);
     try {
       if (esFav) {
-        // ✅ FIX: se manda correo y contenidoId en el body, no en query params
+        // ✅ FIX anterior: se manda correo y contenidoId en el body, no en query params
         await fetch(`${API}/v1/favoritos/eliminar`, {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
@@ -78,7 +80,9 @@ export default function MoviesPage() {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ correo, contenidoId: itemId }),
         });
-        setFavoritosSet(prev => new Set([...prev, itemId]));
+        
+        // ✅ CORRECCIÓN 2: Uso de Array.from().concat() para actualizar el Set sin romper el build
+        setFavoritosSet(prev => new Set(Array.from(prev).concat(itemId)));
       }
     } catch {}
   }, [favoritosSet]);
